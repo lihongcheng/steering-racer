@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-31",
+  "source": "Real iPhone trial; observed game result DOM",
+  "lapsSeconds": [
+    36.383,
+    23.65,
+    36.783
+  ],
+  "totalDisplay": "01:36.817",
+  "bestDisplay": "00:23.650",
+  "sensitivity": 1.65,
+  "resetLapMarkers": false
+}

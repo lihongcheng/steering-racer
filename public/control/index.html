@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steering Lab · 方向盘控制台</title>
+  <link rel="stylesheet" href="/control/style.css"><script type="module" src="/control/app.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="/" aria-label="Steering Lab 首页"><span class="brand-mark">S<span>／</span>L</span><span>STEERING LAB<small>IPHONE → UDP → DESKTOP</small></span></a><div class="header-right"><span class="version">MILESTONE 01</span><span id="bridge" class="pill">连接本地服务…</span></div></header>
+  <main><p><a href="/game/">返回赛车游戏 →</a></p>
+    <div class="intro"><div><div class="eyebrow">MOTION CONTROLLER / iOS 16+</div><h1>方向盘控制台<span class="title-dot">.</span></h1><p>横握手机、校准中位，让每一次转动实时出现在这里。</p></div><div class="intro-note"><span>01</span><div>先验证控制，再驶上赛道<small>此版本为体感联调工具，不含赛车游戏</small></div></div></div>
+    <div id="notice" class="notice" role="status" hidden></div>
+    <div class="workspace">
+      <section class="panel driving-panel" aria-labelledby="wheel-heading">
+        <div class="panel-head"><h2 id="wheel-heading">实时转向</h2><span id="source" class="pill muted">未连接手机</span></div>
+        <div class="wheel-stage">
+          <svg class="wheel-svg" viewBox="0 0 520 420" role="img" aria-label="随手机转角旋转的虚拟方向盘">
+            <defs><linearGradient id="rim" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3d4953"/><stop offset="1" stop-color="#171e25"/></linearGradient><radialGradient id="hub"><stop stop-color="#27343e"/><stop offset="1" stop-color="#141c23"/></radialGradient></defs>
+            <g id="ticks"></g><path d="M 103 104 A 195 195 0 0 1 417 104" fill="none" stroke="#334149" stroke-width="1"/>
+            <path d="M 251 23 L 260 35 L 269 23" fill="#d2f866"/>
+            <g id="wheel" transform="rotate(0 260 213)">
+              <circle cx="260" cy="213" r="150" fill="none" stroke="#070c10" stroke-width="37"/>
+              <circle cx="260" cy="213" r="151" fill="none" stroke="url(#rim)" stroke-width="27"/>
+              <circle cx="260" cy="213" r="167" fill="none" stroke="#46535d" stroke-width="1"/>
+              <path d="M 112 195 L 225 202 L 241 242 L 117 229 Z M 408 195 L 295 202 L 279 242 L 403 229 Z M 240 242 L 280 242 L 282 354 L 238 354 Z" fill="#27343e" stroke="#4a5963"/>
+              <path d="M 116 207 L 212 213 M 308 213 L 404 207 M 250 278 L 250 339 M 270 278 L 270 339" stroke="#51606b" stroke-width="2"/>
+              <rect x="252" y="46" width="16" height="31" rx="3" fill="#d2f866"/>
+              <circle cx="260" cy="213" r="57" fill="url(#hub)" stroke="#43515c"/>
+              <circle cx="260" cy="213" r="48" fill="none" stroke="#33414b"/>
+              <text x="260" y="219" text-anchor="middle" fill="#e8edef" font-family="monospace" font-size="21" font-weight="700">S/L</text>
+            </g>
+            <text x="47" y="119" fill="#6e818e" font-family="monospace" font-size="12">−35°</text><text x="433" y="119" fill="#6e818e" font-family="monospace" font-size="12">+35°</text>
+          </svg>
+          <div class="angle-readout"><strong id="angle">0.0<span>°</span></strong><span id="direction">中位 · 等待体感输入</span></div>
+        </div>
+        <div class="steer-track"><span>L</span><div><i id="steer-marker"></i><b></b></div><span>R</span></div>
+        <div class="status-line"><span id="status-dot" class="status-dot"></span><span id="reason">等待手机连接</span><span class="mono" id="steer-value">STEER 0.000</span></div>
+      </section>
+      <aside class="panel pairing-panel" aria-labelledby="pair-heading">
+        <div class="panel-head"><h2 id="pair-heading">连接你的 iPhone</h2><span class="step-tag">01—03</span></div>
+        <div class="qr-wrap"><img id="qr" width="204" height="204" alt="使用 Steering Lab iPhone App 扫描的配对二维码"><span>用方向盘 App 扫码</span></div>
+        <label class="field-label" for="host">电脑局域网地址</label><select id="host" aria-label="选择与手机同一 Wi-Fi 的电脑地址"></select>
+        <div class="endpoint"><span>UDP</span><code id="endpoint">—</code><button id="copy" class="text-button" type="button">复制连接串</button></div>
+        <ol class="instructions"><li><span>01</span><div>手机与电脑连接同一 Wi-Fi</div></li><li><span>02</span><div>App 扫码，允许访问本地网络</div></li><li><span>03</span><div>横握校准，再点“开始控制”</div></li></ol>
+        <p class="helper">二维码含本次配对密钥。更换控制器或网络后，可重新生成。</p>
+        <button id="reset" class="secondary" type="button">释放控制器 · 重新配对</button>
+      </aside>
+    </div>
+    <section class="metrics" aria-label="传输状态">
+      <article><span>体感采样</span><strong id="sensor-hz">—<small>Hz</small></strong><p>由手机上报实际采样率</p></article>
+      <article><span>UDP 接收</span><strong id="receive-hz">0<small>Hz</small></strong><p>最近一秒的有效输入包</p></article>
+      <article><span>序号缺口</span><strong id="gap">0.0<small>%</small></strong><p>包含迟到、乱序；非链路丢包率</p></article>
+      <article><span>网络往返</span><strong id="rtt">—<small>ms</small></strong><p>手机测量 RTT，非端到端延迟</p></article>
+    </section>
+    <div class="bottom-grid">
+      <section class="panel trace-panel"><div class="panel-head"><h2>转向轨迹</h2><span class="small-mono">最近 8 秒 · −1 … +1</span></div><canvas id="trace" aria-label="最近八秒有效转向值的曲线"></canvas><div class="trace-footer"><span><i></i>实际输出</span><span id="packet-stats">有效包 0 · 旧包 0 · 拒绝 0</span></div></section>
+      <section class="panel test-panel"><div class="panel-head"><h2>电脑模拟</h2><label class="switch"><input id="simulate" type="checkbox" aria-label="启用电脑模拟"><span></span></label></div><p>没有安装 App 时，先用真实 UDP 回环验证电脑链路。<strong>模拟不代表手机已连接。</strong></p><input id="sim-angle" type="range" min="-35" max="35" value="0" step="0.5" disabled aria-label="模拟方向盘转角"><div class="range-labels"><span>−35°</span><output id="sim-value">0°</output><span>+35°</span></div><div class="sim-buttons"><button id="center" class="secondary" disabled>回中</button><button id="drop" class="secondary" disabled>模拟断连</button></div></section>
+    </div>
+    <footer><span>LOCAL FIRST · 96-BYTE AUTHENTICATED UDP</span><span>体感超时 250 ms 自动暂停 · App 保持前台</span></footer>
+  </main>
+</body>
+</html>

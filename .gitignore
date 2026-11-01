@@ -1,0 +1,10 @@
+node_modules/
+public/game/
+work/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+.build/
+DerivedData/
+
+.local/

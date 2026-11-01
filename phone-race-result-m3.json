@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-31",
+  "source": "Real iPhone Build 3; server game state and handset screenshot",
+  "userConfirmed": [
+    "phone race controls",
+    "smoothness update and lock/unlock recovery"
+  ],
+  "state": {
+    "online": true,
+    "state": {
+      "phase": 5,
+      "lap": 3,
+      "speed": 113.24808474792239,
+      "total": 85.79999999999642,
+      "best": 20.666666666666774,
+      "lastLap": 26.199999999999793,
+      "laps": [
+        {
+          "time": 32.59999999999943,
+          "valid": true,
+          "number": 1
+        },
+        {
+          "time": 26.999999999999748,
+          "valid": true,
+          "number": 2
+        },
+        {
+          "time": 26.199999999999793,
+          "valid": true,
+          "number": 3
+        }
+      ],
+      "hint": 0,
+      "distance": 75,
+      "targetSpeed": 79.32216562860678,
+      "delta": 5.533333333333019,
+      "sensitivity": 1.85,
+      "preset": 2,
+      "hits": 4
+    },
+    "commands": [
+      {
+        "action": 1,
+        "result": 1,
+        "time": 1793453697375
+      },
+      {
+        "action": 1,
+        "result": 1,
+        "time": 1793453995630
+      }
+    ]
+  }
+}
