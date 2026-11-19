@@ -15,7 +15,7 @@ Use the imported car's metric wheel spacing (approximately 2.65 m wheelbase / 0.
 - Three local street reflection probes; low-resolution rear mirror in balanced and high quality.
 - Mild glow after tone mapping prevents sky radiance from washing out the road.
 
-Asset imagery used for surface reference: the Poly Haven asset previews linked in `assets/ATTRIBUTIONS.md`. Vehicle geometry is the attributed Three.js example model, with the original-model license limitation documented there. A complete real-world photo survey or measured architectural reconstruction is not claimed.
+Asset imagery used for surface reference: the Poly Haven asset previews linked in the [asset credits](../../assets/ATTRIBUTIONS.md). Vehicle geometry is the attributed Three.js example model, with the original-model license limitation documented there. A complete real-world photo survey or measured architectural reconstruction is not claimed.
 
 ## Street identity
 

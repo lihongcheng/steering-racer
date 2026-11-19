@@ -1,6 +1,6 @@
 # 第二个里程碑验证记录
 
-日期：2026-10-31。项目：`/Users/bytedance/Documents/games/steering-racer`。
+日期：2026-10-31。
 
 ## 已实现
 

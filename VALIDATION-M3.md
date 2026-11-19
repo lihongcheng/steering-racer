@@ -1,6 +1,6 @@
 # 第三个里程碑验证记录
 
-日期：2026-10-31。项目 `/Users/bytedance/Documents/games/steering-racer`，电脑版本 0.3.0，iPhone App Build 3，目标 iPhone 8 Plus / iOS 16.7.10。
+日期：2026-10-31。电脑版本 0.3.0，iPhone App Build 3，目标 iPhone 8 Plus / iOS 16.7.10。
 
 ## 已完成
 
@@ -24,7 +24,7 @@
 | 真机界面 | 通过 Xcode 截图检查 iPhone 8 Plus 横屏布局，速度/成绩区、比赛按钮、预设和踏板均可见 |
 | 模拟器构建 | iOS Simulator arm64 构建通过 |
 | 电脑预设 | 浏览器切换舒适/灵敏后，`/api/game-status` 返回对应灵敏度与预设 |
-| 服务重启 | 使用同一 `.local/pairing.json` 重新启动，游戏 WebSocket 自动恢复，状态继续回传 |
+| 服务重启 | 保留原有配对信息后重新启动，游戏 WebSocket 自动恢复，状态继续回传 |
 
 数据包仍为 96 字节；带 HMAC 完整性与来源验证，但体感内容未加密，面向个人受信任局域网。返回 ACK 表示当前游戏窗口确认处理；浏览器在执行后、确认前发生故障时仍可能得到“操作未确认”，因此手机超时会暂停并要求检查状态，而不无限重发。
 

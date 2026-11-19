@@ -1,7 +1,7 @@
 # 晴天下午写实城市赛车 Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-> 本项目后续执行时使用当前环境已安装的 `executing-plans` 技能；上面的技能名是计划模板约定。本文记录原始方案；电脑端实施结果见 `docs/visual/acceptance.md`。手机真机验收按用户指示延后。
+> 本项目后续执行时使用当前环境已安装的 `executing-plans` 技能；上面的技能名是计划模板约定。本文记录原始方案；电脑端实施结果见 [电脑端验收记录](../visual/acceptance.md)。手机真机验收按用户指示延后。
 
 **Goal:** 将 Greyport 升级为晴天下午的写实城市赛车，让车辆、街景、材质、日照、阴影、反射与驾驶视角在同一个真实尺度下协调一致。
 
@@ -26,14 +26,14 @@
 
 | 已检查位置 | 现状 | 对改造的影响 |
 |---|---|---|
-| `src/game/urban-assets.js` | 跑车由样条车身与几何零件生成；道路 512 px、立面 256 px Canvas 纹理 | 轮廓、轮拱、接缝、灯组、建筑近景细节需要实质升级 |
-| `src/game/world.js` | 渐变天空作为环境反射；统一暖灰雾与黄绿色调；单个 2048 阴影覆盖约 200 米宽 | 环境反射缺少街景，阴影精度有限，色彩校准需要重新建立 |
-| `src/game/cockpit.js` | 独立场景和固定局部灯光，车外遮挡不直接作用于内饰 | 车转弯或进入楼影时，车内日照难与车外保持一致 |
-| `src/game/world.js` | 路灯、部分树木等采用实例化；立面与楼体仍高度重复 | 需要保留批处理优势，同时增加结构变化与街区组织 |
-| `shared/physics.js` | 平面运动学模型、速度相关转向、简化护栏碰撞，无悬架和高程 | 车身动态应先与现有状态解耦；若增加坡度需同步扩展道路采样与碰撞 |
-| `src/game/audio.js` | 单振荡器合成发动机 | 最终可用发动机、胎噪、风噪分层补全真实感 |
-| `src/game/main.js` | 场景同步创建 | 外部资产需要异步启动、加载进度、重试及正确的可开始状态 |
-| `server/index.js`、`vite.config.js` | 仅服务扁平的 `/game/assets/`；`publicDir: false`；缺少细分资源 MIME | 模型、图片、音频、压缩纹理和解码器必须进入可验证的本地构建链路 |
+| 车辆与基础美术资产 | 跑车由样条车身与几何零件生成；道路 512 px、立面 256 px Canvas 纹理 | 轮廓、轮拱、接缝、灯组、建筑近景细节需要实质升级 |
+| 场景渲染 | 渐变天空作为环境反射；统一暖灰雾与黄绿色调；单个 2048 阴影覆盖约 200 米宽 | 环境反射缺少街景，阴影精度有限，色彩校准需要重新建立 |
+| 座舱渲染 | 独立场景和固定局部灯光，车外遮挡不直接作用于内饰 | 车转弯或进入楼影时，车内日照难与车外保持一致 |
+| 场景渲染 | 路灯、部分树木等采用实例化；立面与楼体仍高度重复 | 需要保留批处理优势，同时增加结构变化与街区组织 |
+| 车辆物理 | 平面运动学模型、速度相关转向、简化护栏碰撞，无悬架和高程 | 车身动态应先与现有状态解耦；若增加坡度需同步扩展道路采样与碰撞 |
+| 引擎音效 | 单振荡器合成发动机 | 最终可用发动机、胎噪、风噪分层补全真实感 |
+| 游戏启动与交互 | 场景同步创建 | 外部资产需要异步启动、加载进度、重试及正确的可开始状态 |
+| 资源服务与构建配置 | 仅服务扁平的 `/game/assets/`；`publicDir: false`；缺少细分资源 MIME | 模型、图片、音频、压缩纹理和解码器必须进入可验证的本地构建链路 |
 
 2026-11-18 基线：`npm test` **41/41 通过**；`npm run test:lap` 完成三圈、零碰撞、全部有效；`npm start` 中的生产构建通过，有现有 JS 包超过 700 kB 的提示。已观察展示与座舱画面；本轮未做性能基准或真机手机三圈验收。浏览器观察值不能代替完整赛道帧时间统计。
 
@@ -81,15 +81,9 @@ flowchart LR
 
 ## 4. 分阶段执行任务
 
-以下列出的新文件都是计划路径。每项先形成可检查结果，通过对应验收后进入下一项；实现时再拆为短小提交，不在规划阶段提交功能代码。
+每项先形成可检查结果，通过对应验收后进入下一项；实现时按阶段拆分提交。
 
 ### Task 1：参考、基线与资产可行性
-
-**Files**
-- Create: `docs/visual/realism-reference.md`
-- Create: `docs/visual/baseline.md`
-- Create: `assets/source-manifest.json`
-- Create: `assets/ATTRIBUTIONS.md`
 
 **步骤**
 1. 记录硬件、浏览器、画面尺寸和像素比；采集同一路段与机位的基线截图、帧时间和绘制统计。
@@ -101,15 +95,6 @@ flowchart LR
 **验收**：资产可获取、可分发、可编辑，关键节点完整；有统一的照片参考及画面预算。高清材质不能补救错误的车身轮廓。
 
 ### Task 2：资产加载与本地构建链路
-
-**Files**
-- Create: `src/game/assets/manifest.js`
-- Create: `src/game/assets/load-assets.js`
-- Create: `src/game/assets/dispose-assets.js`
-- Create: `assets/runtime/`（存放经过优化的运行资源与必要解码器）
-- Modify: `src/game/main.js`, `src/game/index.html`, `src/game/urban.css`
-- Modify: `vite.config.js`, `server/index.js`, `package.json`
-- Test: `tests/assets.test.js`, `tests/integration.test.js`
 
 **步骤**
 1. 制定资产清单、节点命名、米制尺寸、车头方向和贴图通道规范；校正模型坐标与枢轴。
@@ -123,14 +108,6 @@ flowchart LR
 
 ### Task 3：渲染基准与真实下午光照
 
-**Files**
-- Create: `src/game/rendering/renderer.js`
-- Create: `src/game/rendering/lighting.js`
-- Create: `src/game/rendering/postprocessing.js`
-- Create: `src/game/rendering/quality.js`
-- Modify: `src/game/world.js`
-- Test: `tests/render-config.test.js`
-
 **步骤**
 1. 把 renderer、光照、后期配置从 `World` 拆出；保持一个明确的线性工作空间和最终色调/输出转换。
 2. 在中性校准场景中检查颜色贴图与法线、粗糙度等数据贴图的色彩空间；移除当前全局黄绿色调作为写实基准。
@@ -143,13 +120,6 @@ flowchart LR
 
 ### Task 4：精细赛车与车辆动态
 
-**Files**
-- Create: `src/game/vehicle/vehicle.js`
-- Create: `src/game/vehicle/materials.js`
-- Create: `src/game/vehicle/vehicle-pose.js`
-- Modify: `src/game/urban-assets.js`, `src/game/world.js`
-- Test: `tests/vehicle-pose.test.js`, `tests/assets.test.js`
-
 **步骤**
 1. 接入通过筛选的 GLB，并统一车长、车宽、轴距、轮径、接地点与原点。
 2. 完成轮拱、面板接缝、进气格栅、灯罩/灯腔、后视镜、排气和轮胎细节，按最终镜头距离分配几何。
@@ -161,16 +131,6 @@ flowchart LR
 **验收**：前后侧视轮廓符合参考，车轮与地面接触准确，接缝和轮拱具有实际结构；动态表现有重量且不改变手机转向的含义。
 
 ### Task 5：样板道路与完整街景
-
-**Files**
-- Create: `src/game/city/road.js`
-- Create: `src/game/city/districts.js`
-- Create: `src/game/city/buildings.js`
-- Create: `src/game/city/props.js`
-- Create: `src/game/city/vegetation.js`
-- Modify: `src/game/world.js`, `src/game/urban-assets.js`
-- Conditional: `shared/track.js`, `shared/physics.js`, `shared/presentation.js`（只有加入高程或改变赛道边界时）
-- Test: `tests/city-layout.test.js`；赛道变化时扩展 `tests/driving.test.js`
 
 **步骤**
 1. 建设约 150–200 米样板：一段直路、一个弯道、开阔日照和建筑阴影，先达到最终目标质量。
@@ -188,13 +148,6 @@ flowchart LR
 
 ### Task 6：座舱、驾驶员与镜头统一
 
-**Files**
-- Modify: `src/game/cockpit.js`, `src/game/instruments.js`, `src/game/windshield.js`
-- Create: `src/game/vehicle/driver.js`
-- Create: `src/game/rendering/camera-rig.js`
-- Modify: `shared/camera.js`, `src/game/world.js`
-- Test: `tests/cockpit.test.js`, `tests/instruments.test.js`, `tests/windshield.test.js`
-
 **步骤**
 1. 把内饰与外形对齐，建立座椅、仪表、方向盘、A 柱和驾驶眼位的真实空间关系。
 2. 完成车内外统一光照：左转、右转和进入楼影时，方向盘、手臂和仪表台的受光正确变化。
@@ -208,11 +161,6 @@ flowchart LR
 
 ### Task 7：反射、空间细节和后期定稿
 
-**Files**
-- Create: `src/game/rendering/reflections.js`
-- Modify: `src/game/rendering/lighting.js`, `src/game/rendering/postprocessing.js`
-- Modify: `src/game/vehicle/materials.js`, `src/game/city/buildings.js`
-
 **步骤**
 1. 在关键街段建立环境反射探针，用平滑过渡或就近选择控制误差；检查金属车身能反映周围建筑的大形体。
 2. 高画质试验低频动态反射，记录额外开销；无法达到预算时保留探针方案。
@@ -224,12 +172,6 @@ flowchart LR
 
 ### Task 8：驾驶反馈、声音与界面
 
-**Files**
-- Modify: `src/game/audio.js`, `src/game/main.js`
-- Modify: `src/game/index.html`, `src/game/style.css`, `src/game/urban.css`
-- Conditional: `shared/physics.js`, `shared/feedback.js`
-- Test: 仅在改变动力学/输入行为时扩展 `tests/driving.test.js` 与相关回归
-
 **步骤**
 1. 按车速、负载和表面混合发动机、胎噪、风噪；有许可的采样不足时明确阶段性边界。
 2. 加入车内外声场区别和轻量碰撞/路缘反馈，并遵守浏览器音频启用规则。
@@ -240,12 +182,6 @@ flowchart LR
 **验收**：画面和声音反馈相符，界面不压住主要行驶区域；手机断连暂停、恢复与重新校准行为正确。
 
 ### Task 9：性能、稳定性与完整验收
-
-**Files**
-- Create: `src/game/debug/render-stats.js`
-- Create: `docs/visual/acceptance.md`
-- Modify: `src/game/rendering/quality.js`, `README.md`
-- Test: 全套现有测试及必要的新测试
 
 **步骤**
 1. 用同一设备、分辨率、路线和画质档记录平均帧率、P95 帧时间、绘制数、三角形、纹理估计成本和资源加载耗时。
@@ -327,6 +263,6 @@ npm start
 
 ## 实施状态
 
-电脑端 0.5.0 已落地：资源链路、统一日照、精细车辆、完整街区、座舱与镜头、反射、音效/界面和桌面验收。格式选择为 WebP + Draco；持续车身反射按性能预算替换为区域探针。手臂仍是简化模型，音效为合成。实际结果见 `docs/visual/acceptance.md`。
+电脑端 0.5.0 已落地：资源链路、统一日照、精细车辆、完整街区、座舱与镜头、反射、音效/界面和桌面验收。格式选择为 WebP + Draco；持续车身反射按性能预算替换为区域探针。手臂仍是简化模型，音效为合成。实际结果见 [电脑端验收记录](../visual/acceptance.md)。
 
 手机真机测试按用户指示稍后进行；车模原始再分发许可仍需闭合，当前交付保留为本地开发版。

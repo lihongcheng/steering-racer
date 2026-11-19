@@ -55,12 +55,10 @@
 - 道路中心线与核心计圈/输入逻辑继续采用现有实现。路缘高度用于视觉轮胎支撑，未宣称实现完整悬架动力学。
 - 音效采用本地合成，没有声称使用实车录音。
 - 用户明确选择“先完成电脑端，手机稍后测”。iPhone 物理握持、真机三圈与实际断连重连验收留待用户实测；自动协议、真实 UDP/WebSocket 测试已通过。
-- 车辆来自有作者署名的 Three.js 示例。其原始 Sketchfab 许可记录尚未取回；当前是本地开发版，公开再分发车辆前需补齐模型许可或替换模型。扫描材质/HDR 为 CC0。详见 `assets/ATTRIBUTIONS.md`。
+- 车辆来自有作者署名的 Three.js 示例。其原始 Sketchfab 许可记录尚未取回；当前是本地开发版，公开再分发车辆前需补齐模型许可或替换模型。扫描材质/HDR 为 CC0。详见[素材来源与许可](../../assets/ATTRIBUTIONS.md)。
 
 ## 查看
 
 运行游戏：<http://127.0.0.1:8850/game/>。
 
 首次克隆时按 README 执行 `npm ci` 和 `npm run assets:prepare`，之后运行 `npm start`。画面巡检：`/game/?inspect=1`（不建立手机连接、不生成比赛成绩）。
-
-本地开发截图保存为 `docs/visual/daylight-overview.jpg`，不随公开仓库发布。

@@ -1,12 +1,12 @@
 # Greyport / Steering Racer
 
-使用 iPhone 作为体感方向盘的本地 3D 赛车原型。项目路径为 `/Users/lihongcheng/Documents/code/steering-racer`，独立于第一阶段 Steering Lab。
+使用 iPhone 作为体感方向盘的本地 3D 城市赛车游戏。
 
 当前浏览器版本为 **0.5.0 Daylight Edition**：精细车辆与内饰、扫描道路材质、立体街区、自然树叶、统一下午日照、街景反射和实时车内后视镜。改造记录和实测范围见 [画面验收记录](docs/visual/acceptance.md)。原生 iPhone App 仍使用 Build 5；历史城市版说明见 `URBAN-EDITION.md`。第三个里程碑功能保留：手机可开始、暂停、继续、重置、查看成绩和再来一局，记住电脑并自动重连。完整使用流程见 `MILESTONE-3.md`。
 
 ## 启动
 
-本机已经安装依赖，双击 `Start Coastline.command`，或在项目目录运行：
+准备好依赖和资源后，可双击 `Start Coastline.command`，或运行：
 
 ```bash
 npm start
@@ -17,7 +17,7 @@ npm start
 - 游戏：<http://127.0.0.1:8850/game/>
 - 体感诊断：<http://127.0.0.1:8850/controller>
 
-首次在其他电脑使用时，需要 Node.js 22.12+ 或 24+。公开仓库不包含尚未确认再分发授权的车模文件，先阅读 `assets/ATTRIBUTIONS.md`，再依次执行：
+首次在其他电脑使用时，需要 Node.js 22.12+ 或 24+。公开仓库不包含尚未确认再分发授权的车模文件，先阅读 [素材来源与许可](assets/ATTRIBUTIONS.md)，再依次执行：
 
 ```bash
 npm ci
@@ -25,7 +25,7 @@ npm run assets:prepare
 npm start
 ```
 
-资源准备命令使用 curl（macOS 自带）从 Three.js 上游下载本地开发车模并校验 SHA-256；已有正确文件时不会重复下载。停止服务可在运行终端按 Ctrl+C。HDR 和扫描材质收录在 `assets/runtime/`；车模通过 `npm run assets:prepare` 在本地准备，不进入 Git。准备完成后的运行资源约 6 MB，游戏从本机加载，无需运行期 CDN 或素材下载。音效在本地合成。素材来源和许可记录见 `assets/ATTRIBUTIONS.md`。
+资源准备命令使用 curl（macOS 自带）从 Three.js 上游下载本地开发车模并校验 SHA-256；已有正确文件时不会重复下载。停止服务可在运行终端按 Ctrl+C。HDR 和扫描材质随项目提供；车模通过 `npm run assets:prepare` 在本地准备，不进入 Git。准备完成后的运行资源约 6 MB，游戏从本机加载，无需运行期 CDN 或素材下载。音效在本地合成。素材来源和许可记录见 [素材来源与许可](assets/ATTRIBUTIONS.md)。
 
 默认游戏 HTTP 端口为 8850，UDP 为 41235，与第一阶段 8848 / 41234 并存。端口被占用时可以指定：
 
@@ -71,25 +71,9 @@ STEERING_HTTP_PORT=8851 STEERING_UDP_PORT=41236 npm start
 
 本阶段没有倒车挡、对手、漂移系统、车辆损伤或复杂悬挂；卡住时使用 R 重置。
 
-## 开发结构
-
-```text
-shared/track.js       周期样条赛道、弧长采样、最近点投影
-shared/physics.js     60 Hz 车辆运动、碰撞、计圈、比赛状态机
-shared/input.js       键盘输入与手机新鲜度判断
-src/game/world.js    Three.js 场景、车辆、赛道和镜头
-src/game/main.js     交互、HUD、暂停、计时、手机配对
-src/game/audio.js    本地 Web Audio 引擎音
-server/              复用第一阶段 UDP 协议、认证与本机 WebSocket
-public/control/      体感诊断页面
-public/game/         Vite 生成的游戏资源（可重新构建）
-ios/                 Build 3 App：比赛控制、成绩回传、记忆和重连
-tests/               物理、计圈、超时与真实 UDP/WebSocket 测试
-```
+## 构建与验证
 
 修改游戏源码后执行 `npm run build`，刷新网页即可。修改服务端后需要重启 Node 服务并重新扫码配对。iOS 工程复制自第一阶段，签名仍使用同一 Bundle Identifier，不会额外占用免费开发 App 名额。
-
-## 验证
 
 ```bash
 npm test
@@ -102,21 +86,15 @@ npm run build
 
 渲染需要 WebGL 2。画质提供流畅、均衡、精细三档，并按实际像素预算限制渲染分辨率。物理以固定 60 Hz 更新，渲染跟随显示刷新率。网络 RTT 仅表示通信往返时间，不代表完整操作到画面的延迟。
 
-第三阶段完整协议、错误码和重连边界见 `MILESTONE-3.md`，最新验收记录见 `VALIDATION-M3.md`。持久配对文件位于 `.local/`，请勿打包或提交其密钥。
+第三阶段完整协议、错误码和重连边界见 `MILESTONE-3.md`，最新验收记录见 `VALIDATION-M3.md`。配对信息仅保存在本地，请勿打包或提交其密钥。
 
 ## 图标与正确安装来源
 
-重新编译手机 App 请双击项目内 `Open iPhone Project.command`，它只打开当前 `games/steering-racer/ios/SteeringWheel.xcodeproj`。旧 `Documents/Codex/.../outputs/steering-lab` 是早期工程，缺少图标和新功能，不应用于重新安装。Build 4 已配置真实方向盘照片图标 `SteeringPhoto`，详见 `ios/ICON-SOURCE.md`。
+重新编译手机 App 请双击 `Open iPhone Project.command`，使用 Xcode 完成签名和安装。App 使用真实方向盘照片图标 `SteeringPhoto`，详见[图标来源](ios/ICON-SOURCE.md)。
 
 手机 Build 5 采用左侧大刹车、右侧大油门、中间状态显示的布局；校准、重置、比赛主按钮位于上方。原连接与预设功能在“连接与设置”菜单，详见 `MILESTONE-3.md`。
 
-## 午后写实版开发
-
-- `src/game/assets/`：资源清单、加载进度、超时重试与本地 Draco 解码。
-- `src/game/city/`：道路、三类街区、立体建筑、树木与街道设施。
-- `src/game/vehicle/`：车型材质、独立轮组、车身姿态、驾驶员和实时仪表。
-- `src/game/rendering/`：日照、反射、后视镜、画质分级、镜头与后期。
-- `src/game/debug/`：帧时间统计与独立画面巡检。
+## 画质与预览
 
 “手感 / 视野”中可选择画质，保存后重新加载。首次资源加载期间开始比赛暂不可用，失败时可重试。
 
