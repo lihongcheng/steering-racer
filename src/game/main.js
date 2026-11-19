@@ -1,9 +1,13 @@
 import './style.css';
 import './urban.css';
 import {World} from './world.js';
+import {loadAssets,disposeAssets} from './assets/load-assets.js';
+import {readQuality,normalizeQuality} from './rendering/quality.js';
+import {Inspection} from './debug/inspection.js';
 import {Race,PHYSICS_DT} from '../../shared/physics.js';
 import {TRACK,points,sampleTrack,trackLength,wrapAngle} from '../../shared/track.js';
 import {InputGate} from '../../shared/input.js';
+import {phonePairingState} from '../../shared/phone-status.js';
 import {EngineAudio} from './audio.js';
 import {RemoteCommands,PHASE,ACTION} from '../../shared/remote.js';
 import {drivingHint} from '../../shared/feedback.js';
@@ -16,7 +20,28 @@ let seatHeight=SEAT_HEIGHT.default;
 try{const saved=localStorage.getItem('greyport.seat-height');if(saved!==null)seatHeight=normalizeSeatHeight(Number(saved));}catch{}
 let world,socket,config,toastTimer,cameraMode='chase',lastFrame=performance.now(),accumulator=0,lastHud=0,fpsFrames=0,fpsAt=performance.now(),fps=0,lastPhase='',sessionBest=null;
 const remote=new RemoteCommands();let owner=false,epoch=null,lastTelemetry=0,hitUntil=0,lastDelta=0;
-try{world=new World($('scene'));}catch(error){$('fatal-text').textContent=error.message;$('fatal').hidden=false;console.error(error);}
+const query=new URLSearchParams(location.search),inspectMode=query.get('inspect')==='1';
+const qualityName=inspectMode&&query.has('quality')?normalizeQuality(query.get('quality')):readQuality();
+let inspection=null;
+async function boot(){
+  let assets;
+  try{
+    $('loading').hidden=false;$('fatal').hidden=true;
+    assets=await loadAssets((progress,label)=>{$('loading-progress').value=progress;$('loading-label').textContent=label;$('loading-percent').textContent=Math.round(progress*100)+'%';});
+    $('loading-label').textContent='准备街区与光影';
+    await new Promise(requestAnimationFrame);
+    world=new World($('scene'),assets,qualityName);
+    // Warm the interior, mirror and exterior programs while the loading screen is visible.
+    // Switching to the cockpit must not compile shaders in the middle of the countdown.
+    for(const view of ['cockpit','chase'])world.render(race.car,{phase:'paused',dt:0,time:1,camera:view,seatHeight});
+    world.render(race.car,{phase:'ready',dt:0,time:0,camera:cameraMode,seatHeight});
+    world.stats.reset();$('loading').hidden=true;lastFrame=performance.now();accumulator=0;updateHUD(lastFrame);
+  }catch(error){
+    if(assets&&!world)disposeAssets(assets);
+    $('loading').hidden=true;$('fatal-text').textContent='场景资源未能完整加载：'+error.message;$('fatal').hidden=false;console.error(error);
+  }
+}
+$('retry-load').onclick=()=>location.reload();
 try{const sensitivity=Number(localStorage.getItem('coastline.sensitivity'));if(sensitivity>=.75&&sensitivity<=2.5)input.sensitivity=sensitivity;}catch{}
 try{const preset=localStorage.getItem('coastline.preset');if(['comfort','responsive'].includes(preset))input.preset=preset;}catch{}
 const formatTime=t=>Number.isFinite(t)?`${String(Math.floor(t/60)).padStart(2,'0')}:${(t%60).toFixed(3).padStart(6,'0')}`:'—';
@@ -24,7 +49,8 @@ try{const saved=Number(localStorage.getItem('greyport.best.v1'));if(saved>0)sess
 function toast(text,duration=3000){clearTimeout(toastTimer);$('toast').textContent=text;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,duration);}
 function saveBest(time){if(!sessionBest||time<sessionBest){sessionBest=time;try{localStorage.setItem('greyport.best.v1',String(time));}catch{}}}
 function setMode(mode){if(['running','countdown'].includes(race.phase))pause('切换控制方式，比赛已暂停');input.setMode(mode);$('keyboard-mode').classList.toggle('selected',mode==='keyboard');$('phone-mode').classList.toggle('selected',mode==='phone');$('keyboard-mode').setAttribute('aria-pressed',String(mode==='keyboard'));$('phone-mode').setAttribute('aria-pressed',String(mode==='phone'));updateHUD(performance.now());}
-function phoneIssue(time){const s=input.snapshot;if(!s?.connected||time-input.receivedAt>250)return '手机连接中断，请检查 Wi-Fi 并重新开始控制';if(!s.armed)return '手机控制已暂停，请在 App 中点“开始控制”';if(!s.calibrated)return '手机尚未校准，请先校准中位';return '体感数据超时，车辆已暂停';}
+function pairingState(time=performance.now()){return phonePairingState(input,time,{serverConnected:socket?.readyState===WebSocket.OPEN,owner,worldReady:!!world,phase:race.phase});}
+function phoneIssue(time){return pairingState(time).hint;}
 function startRace(){
   if(!world||!owner){toast('游戏窗口尚未就绪，请刷新或关闭其他游戏窗口');return;}
   if(input.mode==='phone'&&!input.phoneReady(performance.now())){openPair();toast('先在手机校准并开始比赛');return;}
@@ -88,7 +114,13 @@ $('claim-window').onclick=()=>{if(socket?.readyState===1)socket.send(JSON.string
 $('keyboard-mode').onclick=()=>setMode('keyboard');$('phone-mode').onclick=()=>{setMode('phone');openPair();};$('start').onclick=startRace;
 $('pair-button').onclick=openPair;$('close-pair').onclick=()=>$('pair-overlay').hidden=true;
 $('host').onchange=()=>loadConfig($('host').value).catch(e=>toast(e.message));
-$('use-phone').onclick=()=>{if(!input.phoneReady(performance.now())){toast('请先在手机校准中位并点“开始比赛”');return;}setMode('phone');$('pair-overlay').hidden=true;toast('手机方向盘已就绪');};
+$('use-phone').onclick=()=>{
+  const status=pairingState();if(!status.canChoosePhone)return;
+  setMode('phone');
+  if(socket?.readyState===WebSocket.OPEN&&!owner)socket.send(JSON.stringify({type:'claim-owner'}));
+  if(status.phoneConnected)$('pair-overlay').hidden=true;
+  toast(status.ready?'已切换为手机驾驶':status.hint,4500);
+};
 $('release').onclick=async()=>{try{await post('/api/reset',{});await loadConfig($('host').value);toast('已生成新的二维码，请重新扫码');}catch(e){toast(e.message);}};
 $('pause').onclick=()=>pause();$('resume').onclick=resume;$('restart').onclick=restart;$('home').onclick=home;$('again').onclick=restart;$('finish-home').onclick=home;$('reset-car').onclick=respawn;
 function sound(){audio.enable(!audio.enabled);$('sound').textContent=`音效 ${audio.enabled?'开':'关'}`;}
@@ -98,14 +130,18 @@ $('camera').textContent=CAMERA_LABELS[cameraMode];document.body.dataset.camera=c
 $('sound').onclick=sound;$('camera').onclick=camera;
 $('comfort-preset').onclick=()=>preset('comfort');$('responsive-preset').onclick=()=>preset('responsive');
 function updateSensitivity(){ $('comfort-preset').classList.toggle('selected',input.preset==='comfort');$('responsive-preset').classList.toggle('selected',input.preset==='responsive'); $('sensitivity').value=input.sensitivity;$('sensitivity-value').textContent=`${input.sensitivity.toFixed(2)}×`;$('sensitivity-hint').textContent=`约 ${Math.round(2+33/input.sensitivity)}° 手机转角达到满舵`; }
-function updateSeatHeight(){ $('seat-height').value=String(Math.round(seatHeight*100));$('seat-height-value').textContent=`+${Math.round(seatHeight*100)} cm`;$('seat-height-hint').textContent=`座舱眼位比原来抬高 ${Math.round(seatHeight*100)} cm，仅影响座舱视角。`; }
+function updateSeatHeight(){ $('seat-height').value=String(Math.round(seatHeight*100));$('seat-height-value').textContent=`+${Math.round(seatHeight*100)} cm`;$('seat-height-hint').textContent=`座舱眼位比原来抬高 ${Math.round(seatHeight*100)} cm；高位会适当前移，保持道路视野。`; }
 function setSeatHeight(value){seatHeight=normalizeSeatHeight(value);updateSeatHeight();try{localStorage.setItem('greyport.seat-height',String(seatHeight));}catch{}}
 $('seat-height').oninput=e=>setSeatHeight(Number(e.target.value)/100);
 $('default-seat-height').onclick=()=>setSeatHeight(SEAT_HEIGHT.default);
-$('settings-button').onclick=()=>{pause('调整驾驶设置，比赛已暂停');updateSensitivity();updateSeatHeight();$('settings-overlay').hidden=false;};
+$('settings-button').onclick=()=>{$('quality').value=qualityName;pause('调整驾驶设置，比赛已暂停');updateSensitivity();updateSeatHeight();$('settings-overlay').hidden=false;};
 $('sensitivity').oninput=e=>{input.sensitivity=Number(e.target.value);updateSensitivity();try{localStorage.setItem('coastline.sensitivity',String(input.sensitivity));}catch{}};
 $('default-sensitivity').onclick=()=>{input.sensitivity=1.65;updateSensitivity();try{localStorage.setItem('coastline.sensitivity','1.65');}catch{}};
-$('close-settings').onclick=$('apply-settings').onclick=()=>{$('settings-overlay').hidden=true;};
+$('close-settings').onclick=()=>{$('settings-overlay').hidden=true;};
+$('apply-settings').onclick=()=>{
+  if($('quality').value!==qualityName){try{localStorage.setItem('greyport.quality',$('quality').value);}catch{}location.reload();return;}
+  $('settings-overlay').hidden=true;
+};
 const driveKeys=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight','Space']);
 window.addEventListener('keydown',e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
@@ -117,7 +153,7 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>input.keys.delete(e.code));
 window.addEventListener('blur',()=>{input.clear();if(input.mode==='keyboard')pause('窗口失去焦点，比赛已暂停');});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)pause('页面进入后台，比赛已暂停');});
+document.addEventListener('visibilitychange',()=>{world?.stats.reset();if(document.hidden&&!inspection)pause('页面进入后台，比赛已暂停');});
 $('scene').addEventListener('webglcontextlost',e=>{e.preventDefault();pause('图形设备暂时不可用，请刷新页面');});
 
 const map=$('minimap'),ctx=map.getContext('2d'),bounds={minX:-145,maxX:155,minZ:-120,maxZ:128};
@@ -129,12 +165,14 @@ function drawMap(){
   const p=mapPoint(race.car);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(race.car.heading);ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(-4.5,5);ctx.lineTo(4.5,5);ctx.closePath();ctx.fillStyle='#ddf980';ctx.shadowColor='#d8f378';ctx.shadowBlur=9;ctx.fill();ctx.restore();
 }
 function updateHUD(time){
-  const s=input.snapshot,ready=input.phoneReady(time),car=race.car,controls=input.controls(time);
-  $('connection-dot').classList.toggle('ready',ready);$('pair-status').textContent=ready?'手机方向盘已就绪':s?.connected?(s.calibrated?'请在手机点“开始比赛”':'已连接，请在手机校准中位'):'等待手机连接';
+  const s=input.snapshot,ready=input.phoneReady(time),car=race.car,controls=input.controls(time),pair=pairingState(time);
+  $('connection-dot').classList.toggle('ready',pair.ready);$('pair-status').textContent=pair.text;$('pair-hint').textContent=pair.hint;
   $('mode-label').textContent=input.mode==='phone'?'iPhone 体感驾驶':'键盘驾驶';
-  $('network-status').textContent=input.mode==='phone'?(ready?`${Math.round(s.sensorHz)} Hz / ${s.rttMs>=0?Math.round(s.rttMs)+' ms RTT':'RTT —'}`:'等待手机就绪'):'本地运行';
-  $('start').disabled=!owner||(input.mode==='phone'&&!ready);$('start-hint').textContent=input.mode==='keyboard'?'W / ↑ 加速，S / ↓ 刹车，A D / ← → 转向':ready?'方向盘已就绪 · 左右旋转，按住油门起步':'点右上角“连接手机”，扫码、校准并开始比赛';
-  $('resume').disabled=input.mode==='phone'&&!ready;$('use-phone').disabled=!ready;
+  $('network-status').textContent=socket?.readyState!==WebSocket.OPEN?'接收服务未连接':input.mode==='phone'?(pair.ready?`${Math.round(s.sensorHz)} Hz / ${s.rttMs>=0?Math.round(s.rttMs)+' ms RTT':'RTT —'}`:pair.text):'本地运行';
+  $('start').disabled=!world||!owner||(input.mode==='phone'&&!ready);$('start-hint').textContent=input.mode==='keyboard'?'W / ↑ 加速，S / ↓ 刹车，A D / ← → 转向':pair.hint;
+  $('resume').disabled=input.mode==='phone'&&!ready;$('use-phone').disabled=!pair.canChoosePhone;
+  $('use-phone-label').textContent=input.mode==='phone'&&owner?'已选择手机驾驶':'使用手机驾驶';
+  $('use-phone').title=pair.code==='other-window'?'接管当前游戏窗口并选择手机驾驶':'选择手机输入；实际驾驶需要手机校准并开始控制';
   $('saved-best').textContent=sessionBest?formatTime(sessionBest):'尚无记录';
   $('lap-count').textContent=String(Math.min(3,race.lap.completed+1)).padStart(2,'0');$('lap-progress').style.width=`${car.track.progress*100}%`;$('sector').textContent=`SECTOR ${String(race.lap.nextGate).padStart(2,'0')} / 08`;
   $('lap-time').textContent=formatTime(race.lap.elapsed);$('total-time').textContent=formatTime(race.lap.total);$('best-lap').textContent=sessionBest?formatTime(sessionBest):'—';
@@ -143,12 +181,13 @@ function updateHUD(time){
   $('speed').textContent=String(Math.round(car.speed*3.6)).padStart(3,'0');$('gear').textContent=car.speed<.4?'N':String(Math.min(5,1+Math.floor(car.speed/9)));
   $('revs').style.width=`${Math.min(100,car.speed/43*100)}%`;$('throttle-bar').style.width=`${controls.throttle*100}%`;$('brake-bar').style.width=`${controls.brake*100}%`;$('steering-position').style.left=`${50+car.steering*50}%`;
   const hint=drivingHint(car);$('driving-hint').textContent=hint.text;$('driving-hint').hidden=!hint.code||race.phase!=='running';$('driving-hint').classList.toggle('urgent',[3,4].includes(hint.code));
-  $('surface').hidden=!car.offroad||race.phase!=='running';$('fps').textContent=`${Math.round(fps)} FPS`;
+  $('surface').hidden=!car.offroad||race.phase!=='running';$('fps').textContent=`${Math.round(fps)} FPS`;if(world?.lastStats){const q=world.lastStats;$('render-stats').textContent=`${world.quality.label} · ${Math.round(q.fps||0)} FPS · P95 ${(q.p95||0).toFixed(1)} ms · ${q.calls||0} draws · ${Math.round((q.triangles||0)/1000)}k triangles`;}
   if(race.phase==='countdown')$('countdown').querySelector('strong').textContent=Math.max(1,Math.ceil(race.countdown));
   drawMap();
 }
 function frame(time){
   const elapsed=Math.max(0,(time-lastFrame)/1000);lastFrame=time;
+  if(inspection){if(world)inspection.frame(elapsed,world,time/1000,seatHeight);requestAnimationFrame(frame);return;}
   if(elapsed>.3&&['running','countdown'].includes(race.phase))pause('画面暂停过久，请确认后继续');
   if(input.mode==='phone'&&!input.phoneReady(time))pause(phoneIssue(time));
   accumulator+=Math.min(elapsed,.1);
@@ -161,7 +200,7 @@ function frame(time){
     if(['lap','finish'].includes(race.event)){const lap=race.lap.lastLap;lastDelta=sessionBest?lap.time-sessionBest:0;if(lap.valid)saveBest(lap.time);toast(`第 ${lap.number} 圈 ${formatTime(lap.time)}${lap.valid?(lastDelta?` · 比最佳${lastDelta<0?'快':'慢'} ${Math.abs(lastDelta).toFixed(2)} 秒`:''):' · 重置圈'}`,3500);}
   }
   if(lastPhase!==race.phase)syncPhase();
-  audio.update(race.car.speed,controls.throttle,race.phase==='running');
+  audio.update(race.car.speed,controls.throttle,race.phase==='running',{offroad:race.car.offroad,brake:controls.brake,camera:cameraMode});
   const renderCar=race.phase==='running'?interpolateCar(previousCar,race.car,accumulator/PHYSICS_DT):race.car;
   const visualSteering=cockpitVisualInput(renderCar.steering,input.mode==='phone'&&input.phoneReady(time)?input.snapshot.angle:input.mode==='phone'?0:undefined);
   world?.render(renderCar,{visualSteering,seatHeight,phase:race.phase,brake:controls.brake,dt:Math.min(elapsed,.06),time:time/1000,camera:cameraMode});
@@ -173,4 +212,6 @@ function frame(time){
 const svgNS='http://www.w3.org/2000/svg';
 for(let i=0;i<=40;i++){const angle=(-130+i*6.5)*Math.PI/180,r=i%5===0?85:91;const line=document.createElementNS(svgNS,'line');for(const [k,v]of Object.entries({x1:120+Math.sin(angle)*r,y1:120-Math.cos(angle)*r,x2:120+Math.sin(angle)*98,y2:120-Math.cos(angle)*98,stroke:i>32?'#cc5a3c':'#c0c8ac','stroke-width':i%5===0?2:1}))line.setAttribute(k,v);$('dial-ticks').append(line);if(i%5===0){const text=document.createElementNS(svgNS,'text');text.setAttribute('x',120+Math.sin(angle)*75);text.setAttribute('y',124-Math.cos(angle)*75);text.setAttribute('fill','#bdc5ad');text.setAttribute('font-size','12');text.setAttribute('font-family','monospace');text.setAttribute('text-anchor','middle');text.textContent=String(i/5);$('dial-ticks').append(text);}}
 $('track-length').textContent=`${Math.round(trackLength)} M`;
-connect();loadConfig().catch(e=>toast(`连接服务失败：${e.message}`));syncPhase();updateHUD(performance.now());requestAnimationFrame(frame);
+if(inspectMode)inspection=new Inspection(()=>world?.stats.reset());
+else{connect();loadConfig().catch(e=>toast(`连接服务失败：${e.message}`));syncPhase();updateHUD(performance.now());}
+boot();requestAnimationFrame(frame);

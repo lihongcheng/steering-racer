@@ -36,15 +36,16 @@ export async function startServer({ httpPort = 8850, udpPort = 41235, pairingPat
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Referrer-Policy', 'no-referrer');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:*; frame-ancestors 'none'");
+    res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self' ws://127.0.0.1:* ws://localhost:*; frame-ancestors 'none'");
     if (!allowedHosts().includes(req.headers.host)) return json(res, 403, { error: '仅允许本机访问' });
     const url = new URL(req.url, `http://${req.headers.host}`);
     try {
       if (req.method === 'GET' && ['/', '/game'].includes(url.pathname)) { res.writeHead(302, { Location: '/game/' }); return res.end(); }
       if (req.method === 'GET' && (url.pathname === '/game/' || /^\/game\/assets\/[a-zA-Z0-9._-]+$/.test(url.pathname))) {
         const asset = url.pathname === '/game/' ? 'index.html' : url.pathname.slice(6);
-        const type = asset.endsWith('.html') ? 'text/html' : asset.endsWith('.js') ? 'text/javascript' : asset.endsWith('.css') ? 'text/css' : asset.endsWith('.map') ? 'application/json' : 'application/octet-stream';
-        try { const bytes = await readFile(new URL('../public/game/' + asset, import.meta.url)); res.writeHead(200, { 'Content-Type': type + '; charset=utf-8' }); return res.end(bytes); }
+        const types = {html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',map:'application/json',json:'application/json',webp:'image/webp',png:'image/png',jpg:'image/jpeg',glb:'model/gltf-binary',gltf:'model/gltf+json',wasm:'application/wasm',hdr:'application/octet-stream',ogg:'audio/ogg',wav:'audio/wav'};
+        const type = types[asset.split('.').pop()] || 'application/octet-stream';
+        try { const bytes = await readFile(new URL('../public/game/' + asset, import.meta.url)); res.writeHead(200, { 'Content-Type': type, 'Cache-Control': asset === 'index.html' ? 'no-cache' : 'public, max-age=31536000, immutable' }); return res.end(bytes); }
         catch { return json(res, 404, { error: '游戏资源未生成，请先运行 npm run build' }); }
       }
       if (req.method === 'GET' && url.pathname === '/api/config') {

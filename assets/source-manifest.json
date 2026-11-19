@@ -1,0 +1,149 @@
+{
+  "retrieved": "2026-11-18",
+  "assets": [
+    {
+      "file": "runtime/afternoon.hdr",
+      "source": "https://polyhaven.com/a/kloppenheim_06_puresky",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "Original 1K HDR",
+      "bytes": 1173154,
+      "sha256": "206c67e3a1b992282821cf06662bdd69bbb4915c1c4444a66338a40d6a7d4e34"
+    },
+    {
+      "file": "runtime/asphalt_02_Diffuse.webp",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 455162,
+      "sha256": "ed86c9167c024e5966cd4865d01bd001d328cc4b83d16569df54eb49bc412c79"
+    },
+    {
+      "file": "runtime/asphalt_02_Rough.webp",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 356594,
+      "sha256": "5756cea1d95f9750ebbc664e3d70dbea09abfe0276b09451d45c288c46199dba"
+    },
+    {
+      "file": "runtime/asphalt_02_nor_gl.webp",
+      "source": "https://polyhaven.com/a/asphalt_02",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 452932,
+      "sha256": "f4c4b5a9dfb57551deca0e8978888fe1f404733d569534efee3a4dea5698f59a"
+    },
+    {
+      "file": "runtime/bark.webp",
+      "source": "https://polyhaven.com/a/tree_small_02",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "Cropped/resized leaf atlas, combined alpha, WebP encoding; branch albedo resized",
+      "bytes": 33416,
+      "sha256": "c299f6a716a731781d472e35fe75b0109d9e9ef397b54e84841830e335778891"
+    },
+    {
+      "file": "runtime/brick_wall_001_Diffuse.webp",
+      "source": "https://polyhaven.com/a/brick_wall_001",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 252084,
+      "sha256": "a3b98c2c9827229f3073768073279b75ec4662f3fc0d081f9b22a8098428f0c2"
+    },
+    {
+      "file": "runtime/brick_wall_001_Rough.webp",
+      "source": "https://polyhaven.com/a/brick_wall_001",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 65914,
+      "sha256": "a55939202f6e16dbe44f6a72bcb95ad7458ae75d13d6dcd693179250b72da287"
+    },
+    {
+      "file": "runtime/brick_wall_001_nor_gl.webp",
+      "source": "https://polyhaven.com/a/brick_wall_001",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 273668,
+      "sha256": "9a343216ea9016128667577d020d383370faf9dd7981fa9e6bd9dc14b6149d9c"
+    },
+    {
+      "file": "runtime/concrete_pavement_Diffuse.webp",
+      "source": "https://polyhaven.com/a/concrete_pavement",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 326444,
+      "sha256": "9b44e60d9101196bdf612810ba2fe1f548f3991bea09a01825af12c1b1272044"
+    },
+    {
+      "file": "runtime/concrete_pavement_Rough.webp",
+      "source": "https://polyhaven.com/a/concrete_pavement",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 61506,
+      "sha256": "b53fbe5e1ac23d6d1d5f0367b1c12e14dbc2d9290d3f2a143790709c2def57b4"
+    },
+    {
+      "file": "runtime/concrete_pavement_nor_gl.webp",
+      "source": "https://polyhaven.com/a/concrete_pavement",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 449886,
+      "sha256": "05b592c2faf852cda1c13ac590f235f0fe7c42c71b9d1259a81d4a8ec8a1a308"
+    },
+    {
+      "file": "runtime/concrete_wall_007_Diffuse.webp",
+      "source": "https://polyhaven.com/a/concrete_wall_007",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 153424,
+      "sha256": "1c3cefa3feb06bc9d0c4cdf4ffe06e201144b9b4a2dee3bff3202bbd91767aca"
+    },
+    {
+      "file": "runtime/concrete_wall_007_Rough.webp",
+      "source": "https://polyhaven.com/a/concrete_wall_007",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 121252,
+      "sha256": "9fa4265de6a163a4ada879073f300c6288b583904601ab5f6e2ff4edf4e51eae"
+    },
+    {
+      "file": "runtime/concrete_wall_007_nor_gl.webp",
+      "source": "https://polyhaven.com/a/concrete_wall_007",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "1K source converted to WebP quality 88",
+      "bytes": 66080,
+      "sha256": "4814e12bbfc6e3d7c782fff4dd16f212ee32f641de03b6725a445ca02a701fe8"
+    },
+    {
+      "file": "runtime/ferrari.glb",
+      "source": "https://threejs.org/examples/models/gltf/ferrari.glb",
+      "license": "See ATTRIBUTIONS.md",
+      "author": "vicent091036, via three.js examples",
+      "modifications": "Runtime materials, wheel pivots, mirror surface separation, stowed visors, dark windshield surround and camera fitting; source GLB retained unchanged.",
+      "bytes": 1681572,
+      "sha256": "cafe3f48da6797aa9bde75ca768bc5b57db366575fd233e90df186ae988a876e"
+    },
+    {
+      "file": "runtime/leaf-branch.webp",
+      "source": "https://polyhaven.com/a/tree_small_02",
+      "license": "CC0-1.0",
+      "author": "Poly Haven",
+      "modifications": "Cropped/resized leaf atlas, combined alpha, WebP encoding; branch albedo resized",
+      "bytes": 53462,
+      "sha256": "22281c81694d7ca3fd8e4a4c257ecfa734778998df5abc742dd3464f855a60a8"
+    }
+  ]
+}

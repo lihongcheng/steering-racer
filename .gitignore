@@ -8,3 +8,8 @@ xcuserdata/
 DerivedData/
 
 .local/
+
+# Third-party vehicle redistribution permission is not yet verified.
+assets/runtime/ferrari.glb
+assets/runtime/.download-*/
+docs/visual/daylight-overview.jpg

@@ -1,8 +1,8 @@
 # Greyport / Steering Racer
 
-使用 iPhone 作为体感方向盘的本地 3D 赛车原型。项目路径为 `/Users/bytedance/Documents/games/steering-racer`，独立于第一阶段 Steering Lab。
+使用 iPhone 作为体感方向盘的本地 3D 赛车原型。项目路径为 `/Users/lihongcheng/Documents/code/steering-racer`，独立于第一阶段 Steering Lab。
 
-当前版本已升级为 Greyport 城市竞速版（原生 App 为 Build 5），详见 `URBAN-EDITION.md`。第三个里程碑功能保留：手机可开始、暂停、继续、重置、查看成绩和再来一局，记住电脑并自动重连。完整使用流程见 `MILESTONE-3.md`。
+当前浏览器版本为 **0.5.0 Daylight Edition**：精细车辆与内饰、扫描道路材质、立体街区、自然树叶、统一下午日照、街景反射和实时车内后视镜。改造记录和实测范围见 [画面验收记录](docs/visual/acceptance.md)。原生 iPhone App 仍使用 Build 5；历史城市版说明见 `URBAN-EDITION.md`。第三个里程碑功能保留：手机可开始、暂停、继续、重置、查看成绩和再来一局，记住电脑并自动重连。完整使用流程见 `MILESTONE-3.md`。
 
 ## 启动
 
@@ -17,7 +17,15 @@ npm start
 - 游戏：<http://127.0.0.1:8850/game/>
 - 体感诊断：<http://127.0.0.1:8850/controller>
 
-首次在其他电脑使用时，需要 Node.js 22.12+ 或 24+，先执行 `npm ci`。停止服务可在运行终端按 Ctrl+C。全部资源和音效在本地生成，不依赖 CDN、云服务或外部素材下载。
+首次在其他电脑使用时，需要 Node.js 22.12+ 或 24+。公开仓库不包含尚未确认再分发授权的车模文件，先阅读 `assets/ATTRIBUTIONS.md`，再依次执行：
+
+```bash
+npm ci
+npm run assets:prepare
+npm start
+```
+
+资源准备命令使用 curl（macOS 自带）从 Three.js 上游下载本地开发车模并校验 SHA-256；已有正确文件时不会重复下载。停止服务可在运行终端按 Ctrl+C。HDR 和扫描材质收录在 `assets/runtime/`；车模通过 `npm run assets:prepare` 在本地准备，不进入 Git。准备完成后的运行资源约 6 MB，游戏从本机加载，无需运行期 CDN 或素材下载。音效在本地合成。素材来源和许可记录见 `assets/ATTRIBUTIONS.md`。
 
 默认游戏 HTTP 端口为 8850，UDP 为 41235，与第一阶段 8848 / 41234 并存。端口被占用时可以指定：
 
@@ -92,7 +100,7 @@ npm run build
 
 `test:lap` 使用确定性的参考驾驶程序检验同一套物理和计圈逻辑，输出三圈成绩；它是离线回归测试，不代表用户成绩，也不向游戏注入虚假手机输入。实际验证记录见 `VALIDATION.md`。
 
-渲染需要 WebGL 2。默认像素比最多 1.75，物理以固定 60 Hz 更新，渲染跟随显示刷新率。网络 RTT 仅表示通信往返时间，不代表完整操作到画面的延迟。
+渲染需要 WebGL 2。画质提供流畅、均衡、精细三档，并按实际像素预算限制渲染分辨率。物理以固定 60 Hz 更新，渲染跟随显示刷新率。网络 RTT 仅表示通信往返时间，不代表完整操作到画面的延迟。
 
 第三阶段完整协议、错误码和重连边界见 `MILESTONE-3.md`，最新验收记录见 `VALIDATION-M3.md`。持久配对文件位于 `.local/`，请勿打包或提交其密钥。
 
@@ -101,3 +109,15 @@ npm run build
 重新编译手机 App 请双击项目内 `Open iPhone Project.command`，它只打开当前 `games/steering-racer/ios/SteeringWheel.xcodeproj`。旧 `Documents/Codex/.../outputs/steering-lab` 是早期工程，缺少图标和新功能，不应用于重新安装。Build 4 已配置真实方向盘照片图标 `SteeringPhoto`，详见 `ios/ICON-SOURCE.md`。
 
 手机 Build 5 采用左侧大刹车、右侧大油门、中间状态显示的布局；校准、重置、比赛主按钮位于上方。原连接与预设功能在“连接与设置”菜单，详见 `MILESTONE-3.md`。
+
+## 午后写实版开发
+
+- `src/game/assets/`：资源清单、加载进度、超时重试与本地 Draco 解码。
+- `src/game/city/`：道路、三类街区、立体建筑、树木与街道设施。
+- `src/game/vehicle/`：车型材质、独立轮组、车身姿态、驾驶员和实时仪表。
+- `src/game/rendering/`：日照、反射、后视镜、画质分级、镜头与后期。
+- `src/game/debug/`：帧时间统计与独立画面巡检。
+
+“手感 / 视野”中可选择画质，保存后重新加载。首次资源加载期间开始比赛暂不可用，失败时可重试。
+
+开发检查入口：`http://127.0.0.1:8850/game/?inspect=1`；可加 `&quality=low` 或 `&quality=high`。巡检用于指定机位和自动浏览街道，不建立手机连接、不计比赛成绩。
